@@ -1,0 +1,182 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #eaeded;
+}
+
+
+.amazon-header {
+  background-color: #131921;
+  color: white;
+  width: 100%;
+}
+
+.header-container {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 8px 15px;
+}
+
+.amazon-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  width: 105px;
+  height: auto;
+  display: block;
+}
+
+.header-items:hover{
+   border: 1px solid white;
+}
+
+.location-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 145px;
+  cursor: pointer;
+}
+
+.location-box small {
+  color: #ccc;
+  font-size: 11px;
+}
+
+.location-box strong {
+  font-size: 13px;
+}
+
+.search-box {
+  height: 42px;
+  display: flex;
+  flex: 1;
+  max-width: 800px;
+}
+
+.search-box select {
+  width: 55px;
+  border: none;
+  background-color: #e6e6e6;
+  padding: 5px;
+  border-radius: 5px 0 0 5px;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  font-size: 15px;
+  outline: none;
+}
+
+.search-box button {
+  width: 55px;
+  border: none;
+  background-color: #febd69;
+  font-size: 20px;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+}
+
+
+
+.language-box {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+
+
+.header-link {
+  color: white;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+}
+
+.header-link small {
+  font-size: 11px;
+}
+
+.header-link strong {
+  font-size: 13px;
+}
+
+.account {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 5px;
+}
+
+
+
+.cart-box {
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.cart-box strong {
+  font-size: 14px;
+}
+
+
+
+.home-page {
+  min-height: 500px;
+  padding: 40px;
+  text-align: center;
+}
+
+.category-navbar {
+  background-color: #232f3e;
+  color: white;
+  overflow-x: auto;
+}
+
+.category-container {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.nav-item {
+  padding: 10px 9px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  border: 1px solid white;
+}
+
+.menu-item {
+  font-size: 15px;
+}
+
+
+
+ 
+
+
+
