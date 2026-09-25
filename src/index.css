@@ -14,6 +14,7 @@ body {
   background-color: #131921;
   color: white;
   width: 100%;
+  
 }
 
 .header-container {
@@ -23,6 +24,7 @@ body {
   gap: 15px;
   padding: 8px 15px;
 }
+
 
 .amazon-logo {
   flex-shrink: 0;
@@ -35,7 +37,11 @@ body {
   height: auto;
   display: block;
 }
-
+ .header-items{
+  /* padding: 9px 4px; */
+  font-size: 14px;
+  cursor: pointer;
+} 
 .header-items:hover{
    border: 1px solid white;
 }
@@ -113,6 +119,14 @@ body {
   font-size: 13px;
 }
 
+
+.account-wrapper {
+  position: relative;
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
 .account {
   display: flex;
   flex-direction: column;
@@ -121,7 +135,140 @@ body {
   padding: 5px;
 }
 
+.account small {
+  font-size: 11px;
+}
 
+.account strong {
+  font-size: 13px;
+}
+
+
+
+.account-popup {
+  display: none;
+
+  position: absolute;
+
+  top: 48px;
+  right: -100px;
+
+  width: 500px;
+
+  background: white;
+  color: #111;
+
+  border: 1px solid #ccc;
+  border-radius: 3px;
+
+  padding: 15px;
+
+  z-index: 1000;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+
+
+.account-wrapper:hover .account-popup {
+  display: block;
+}
+
+
+.account-popup::before {
+  content: "";
+
+  position: absolute;
+
+  top: -10px;
+  right: 110px;
+
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid white;
+}
+
+
+
+.popup-signin {
+  display: block;
+
+  width: 220px;
+  height: 34px;
+
+  margin: 0 auto 8px;
+
+  border: none;
+  border-radius: 17px;
+
+  background: #ffd814;
+
+  cursor: pointer;
+
+  font-size: 13px;
+}
+
+.popup-signin:hover {
+  background: #f7ca00;
+}
+
+
+.new-customer {
+  text-align: center;
+  font-size: 11px;
+  margin: 5px 0 12px;
+}
+
+.new-customer a {
+  color: #0066c0;
+  text-decoration: none;
+}
+
+.new-customer a:hover {
+  text-decoration: underline;
+}
+
+
+
+.popup-content {
+  display: grid;
+
+  grid-template-columns: 1fr 1.3fr;
+
+  gap: 20px;
+}
+
+
+
+.popup-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.popup-column + .popup-column {
+  border-left: 1px solid #ddd;
+  padding-left: 20px;
+}
+
+.popup-column h3 {
+  font-size: 16px;
+  margin: 5px 0 10px;
+}
+
+.popup-column a {
+  color: #444;
+
+  text-decoration: none;
+
+  font-size: 13px;
+
+  line-height: 24px;
+}
+
+.popup-column a:hover {
+  color: #c45500;
+  text-decoration: underline;
+}
 
 .cart-box {
   color: white;
@@ -136,14 +283,10 @@ body {
 .cart-box strong {
   font-size: 14px;
 }
-
-
-
-.home-page {
-  min-height: 500px;
-  padding: 40px;
-  text-align: center;
+.bi-cart3{
+  font-size: 32px;
 }
+
 
 .category-navbar {
   background-color: #232f3e;
@@ -173,10 +316,3 @@ body {
 .menu-item {
   font-size: 15px;
 }
-
-
-
- 
-
-
-

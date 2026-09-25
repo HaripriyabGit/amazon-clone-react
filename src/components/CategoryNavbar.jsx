@@ -62,9 +62,7 @@ function CategoryNavbar() {
           Home & Kitchen
         </div>
 
-        <div className="nav-item">
-          Fresh
-        </div>
+        
 
       </div>
 

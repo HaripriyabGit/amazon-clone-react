@@ -9,17 +9,19 @@ function Header() {
       <header className="amazon-header">
         <div className="header-container">
 
-        
-          <a href="/" className="header-items amazon-logo">
+          <div className="header-items">
+          <a href="/" className=" amazon-logo">
            <img src="./amazon-logo-main.png" className="header-logo" />
           </a>
-
-       
-          <div className="header-items location-box">
+       </div>
+       <div className="header-items">
+        
+          <div className="location-box">
             <small>Delivering to Kottayam 686019</small>
-            <strong>Update location</strong>
+          
+            <strong>    <i className="bi bi-geo-alt"></i>Update location</strong>
           </div>
-
+        </div>
        
           <div className="search-box">
             <select>
@@ -76,7 +78,9 @@ function Header() {
               placeholder="Search Amazon.in"
             />
 
-            <button></button>
+            <button className="search-btn">
+            <i className="bi bi-search"></i>
+            </button>
           </div>
 
         
@@ -84,29 +88,76 @@ function Header() {
             🇮🇳 <strong>EN</strong> 
           </div>
 
-        
-    
+  <div className="header-items account-wrapper">
 
-  <div className="header-items account">
+  <div className="account">
     <small>Hello, sign in</small>
-    <strong>Account & Lists </strong>
+    <strong>Account & Lists ▾</strong>
   </div>
 
+  <div className="account-popup">
+
+    <button className="popup-signin">
+      Sign in
+    </button>
+
+    <p className="new-customer">
+      New customer?
+      <a href="#"> Start here.</a>
+    </p>
+
+    <hr />
+
+    <div className="popup-content">
+
+   
+      <div className="popup-column">
+        <h3>Your Lists</h3>
+
+        <a href="#">Create a Wish List</a>
+        <a href="#">Wish from Any Website</a>
+        <a href="#">Baby Wishlist</a>
+        <a href="#">Discover Your Style</a>
+        <a href="#">Explore Showroom</a>
+      </div>
+
+      <div className="popup-column">
+        <h3>Your Account</h3>
+
+        <a href="#">Your Account</a>
+        <a href="#">Your Orders</a>
+        <a href="#">Your Wish List</a>
+        <a href="#">Keep shopping for</a>
+        <a href="#">Your Recommendations</a>
+        <a href="#">Your Prime Membership</a>
+        <a href="#">Your Prime Video</a>
+        <a href="#">Your Subscribe & Save Items</a>
+        <a href="#">Memberships & Subscriptions</a>
+        <a href="#">Your Seller Account</a>
+        <a href="#">Manage Your Content and Devices</a>
+        <a href="#">Your Music Library</a>
+        <a href="#">Register for a free Business Account</a>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
 
-
-         
-          <a href="" className=" header-items header-link">
+         <div className="header-items">
+          <a href="" className="header-link">
             <small>Returns</small>
             <strong>& Orders</strong>
           </a>
-          
-       
-          <a href="" className="header-items cart-box">
+          </div>
+       <div className="header-items">
+          <a href="" className="cart-box">
             
-            <strong>Cart</strong>
+            <strong><i className="bi bi-cart3"></i>Cart</strong>
           </a>
-
+  </div>
         </div>
       </header>
  
