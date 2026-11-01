@@ -1,166 +1,351 @@
-import React from "react";
 
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useCart } from "../pages/CartContext";
 
 function Header() {
- 
-  return (
- 
-     
-      <header className="amazon-header">
-        <div className="header-container">
+  const navigate = useNavigate();
+  const { cartCount } = useCart();
 
-          <div className="header-items">
-          <a href="/" className=" amazon-logo">
-           <img src="./amazon-logo-main.png" className="header-logo" />
-          </a>
-       </div>
-       <div className="header-items">
-        
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState("All Categories");
+
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const updateUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("user")) || null);
+      } catch {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener("userLoggedIn", updateUser);
+    window.addEventListener("storage", updateUser);
+
+    return () => {
+      window.removeEventListener("userLoggedIn", updateUser);
+      window.removeEventListener("storage", updateUser);
+    };
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    const query = searchText.trim();
+
+    if (!query) return;
+
+    navigate(
+      `/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(selectedCategory)}`
+    );
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setAccountOpen(false);
+    navigate("/");
+  };
+
+  const accountLinks = [
+    { name: "Your Account", path: "/account" },
+    { name: "Your Orders", path: "/orders" },
+    { name: "Your Wish List", path: "/wishlist" },
+    { name: "Keep shopping for", path: "" },
+    { name: "Your Recommendations", path: "" },
+    { name: "Returns", path: "/orders" },
+    { name: "Your Prime Membership", path: "" },
+    { name: "Your Prime Video", path: "" },
+    { name: "Your Subscribe & Save Items", path: "" },
+    { name: "Memberships & Subscriptions", path: "" },
+    { name: "Your Seller Account", path: "" },
+    { name: "Manage Your Content and Devices", path: "" },
+    { name: "Your Music Library", path: "" },
+    { name: "Register for a free Business Account", path: "" },
+  ];
+
+  return (
+    <header className="amazon-header">
+      <div className="header-container">
+
+    
+        <div className="header-items">
+          <Link to="/" className="amazon-logo">
+            <img
+              src="/amazon-logo-main.png"
+              className="header-logo"
+              alt="Amazon"
+            />
+          </Link>
+        </div>
+
+       
+        <div className="header-items">
           <div className="location-box">
             <small>Delivering to Kottayam 686019</small>
-          
-            <strong>    <i className="bi bi-geo-alt"></i>Update location</strong>
+            <strong>
+              <i className="bi bi-geo-alt"></i>
+              Update location
+            </strong>
           </div>
         </div>
-       
-          <div className="search-box">
-            <select>
-        <option selected="selected" >All Categories</option>
-        <option >Alexa Skills</option>
-        <option >Amazon Devices</option>
-        <option >Amazon Fashion</option>
-        <option >Amazon Fresh</option>
-        <option >Amazon Fresh Meat</option>
-        <option >Amazon Pharmacy</option>
-        <option >Appliances</option>
-        <option >Apps &amp; Games</option>
-        <option >Audible Audiobooks</option>
-        <option >Baby</option>
-        <option >Beauty</option>
-        <option >Books</option>
-        <option >Car &amp; Motorbike</option>
-        <option >Clothing &amp; Accessories</option>
-        <option >Collectibles</option>
-        <option >Computers &amp; Accessories</option>
-        <option >Deals</option>
-        <option >Electronics</option>
-        <option >Furniture</option>
-        <option >Garden &amp; Outdoors</option>
-        <option >Gift Cards</option>
-        <option >Grocery &amp; Gourmet Foods</option>
-        <option >Health &amp; Personal Care</option>
-        <option >Home &amp; Kitchen</option>
-        <option >Industrial &amp; Scientific</option>
-        <option>Jewellery</option>
-        <option >Kindle Store</option>
-        <option >Luggage &amp; Bags</option>
-        <option >Luxury Beauty</option>
-        <option >Movies &amp; TV Shows</option>
-        <option >MP3 Music</option>
-        <option >Music</option>
-        <option >Musical Instruments</option>
-        <option >Office Products</option>
-        <option >Pet Supplies</option>
-        <option >Prime Video</option>
-        <option >Shoes &amp; Handbags</option>
-        <option >Software</option>
-        <option >Sports, Fitness &amp; Outdoors</option>
-        <option >Subscribe &amp; Save</option>
-        <option >Tools &amp; Home Improvement</option>
-        <option >Toys &amp; Games</option>
-        <option >Under ₹500</option>
-        <option >Video Games</option>
-        <option >Watches</option>
-            </select>
 
-            <input
-              type="text"
-              placeholder="Search Amazon.in"
-            />
+    
+        <form className="search-box" onSubmit={handleSearch}>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            aria-label="Select product category"
+          >
+            {[
+              "All Categories",
+              "Alexa Skills",
+              "Amazon Devices",
+              "Amazon Fashion",
+              "Amazon Fresh",
+              "Appliances",
+              "Apps & Games",
+              "Baby",
+              "Beauty",
+              "Books",
+              "Clothing & Accessories",
+              "Computers & Accessories",
+              "Deals",
+              "Electronics",
+              "Furniture",
+              "Garden & Outdoors",
+              "Grocery & Gourmet Foods",
+              "Health & Personal Care",
+              "Home & Kitchen",
+              "Jewellery",
+              "Luggage & Bags",
+              "Office Products",
+              "Pet Supplies",
+              "Shoes & Handbags",
+              "Sports, Fitness & Outdoors",
+              "Tools & Home Improvement",
+              "Toys & Games",
+              "Video Games",
+              "Watches",
+            ].map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
 
-            <button className="search-btn">
+          <input
+            type="search"
+            placeholder="Search Amazon.in"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            aria-label="Search products"
+          />
+
+          <button type="submit" className="search-btn" aria-label="Search">
             <i className="bi bi-search"></i>
-            </button>
-          </div>
+          </button>
+        </form>
 
-        
-          <div className="header-items language-box">
-            🇮🇳 <strong>EN</strong> 
-          </div>
+    
+        <div
+          className="header-items language-box"
+          onMouseEnter={() => setLanguageOpen(true)}
+          onMouseLeave={() => setLanguageOpen(false)}
+        >
+          <span className="india-flag">🇮🇳</span>
+          <strong>EN</strong>
+          <span className="language-arrow">▾</span>
 
-  <div className="header-items account-wrapper">
+          {languageOpen && (
+            <div className="language-popup">
+              <h3>
+                Change Language
+                <a href="#" onClick={(e) => e.preventDefault()}>
+                  Learn more
+                </a>
+              </h3>
 
-  <div className="account">
-    <small>Hello, sign in</small>
-    <strong>Account & Lists ▾</strong>
-  </div>
+              {[
+                ["English - EN", "en"],
+                ["हिन्दी - HI", "hi"],
+                ["தமிழ் - TA", "ta"],
+                ["తెలుగు - TE", "te"],
+                ["ಕನ್ನಡ - KN", "kn"],
+                ["മലയാളം - ML", "ml"],
+                ["বাংলা - BN", "bn"],
+                ["मराठी - MR", "mr"],
+              ].map(([label, value], index) => (
+                <label className="language-option" key={value}>
+                  <input
+                    type="radio"
+                    name="language"
+                    value={value}
+                    defaultChecked={index === 0}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
 
-  <div className="account-popup">
+              <hr />
 
-    <button className="popup-signin">
-      Sign in
-    </button>
+              <div className="shopping-country">
+                <span>🇮🇳</span>
+                <span>You are shopping on Amazon.in</span>
+              </div>
 
-    <p className="new-customer">
-      New customer?
-      <a href="#"> Start here.</a>
-    </p>
-
-    <hr />
-
-    <div className="popup-content">
+              <a
+                href="#"
+                className="change-country"
+                onClick={(e) => e.preventDefault()}
+              >
+                Change country/region.
+              </a>
+            </div>
+          )}
+        </div>
 
    
-      <div className="popup-column">
-        <h3>Your Lists</h3>
-
-        <a href="#">Create a Wish List</a>
-        <a href="#">Wish from Any Website</a>
-        <a href="#">Baby Wishlist</a>
-        <a href="#">Discover Your Style</a>
-        <a href="#">Explore Showroom</a>
-      </div>
-
-      <div className="popup-column">
-        <h3>Your Account</h3>
-
-        <a href="#">Your Account</a>
-        <a href="#">Your Orders</a>
-        <a href="#">Your Wish List</a>
-        <a href="#">Keep shopping for</a>
-        <a href="#">Your Recommendations</a>
-        <a href="#">Your Prime Membership</a>
-        <a href="#">Your Prime Video</a>
-        <a href="#">Your Subscribe & Save Items</a>
-        <a href="#">Memberships & Subscriptions</a>
-        <a href="#">Your Seller Account</a>
-        <a href="#">Manage Your Content and Devices</a>
-        <a href="#">Your Music Library</a>
-        <a href="#">Register for a free Business Account</a>
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-         <div className="header-items">
-          <a href="" className="header-link">
-            <small>Returns</small>
-            <strong>& Orders</strong>
-          </a>
+        <div
+          className="header-items account-wrapper"
+          onMouseEnter={() => setAccountOpen(true)}
+          onMouseLeave={() => setAccountOpen(false)}
+        >
+          <div className="account">
+          <small>
+  Hello, {user ? (user.name || user.emailOrPhone) : "sign in"}
+</small>
+            <strong>Account & Lists ▾</strong>
           </div>
-       <div className="header-items">
-          <a href="" className="cart-box">
-            
-            <strong><i className="bi bi-cart3"></i>Cart</strong>
-          </a>
-  </div>
+
+          {accountOpen && (
+            <div className="account-popup">
+
+             
+              {!user && (
+                <>
+                  <button
+                    className="popup-signin"
+                    onClick={() => {
+                      setAccountOpen(false);
+                      navigate("/login");
+                    }}
+                  >
+                    Sign in
+                  </button>
+
+                  <p className="new-customer">
+                    New customer?{" "}
+                    <Link
+                      to="/login"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      Start here.
+                    </Link>
+                  </p>
+
+                  <hr />
+                </>
+              )}
+
+              <div className="popup-content">
+
+           
+                <div className="popup-column">
+                  <h3>Your Lists</h3>
+
+                  {[
+                    "Shopping List",
+                    "Create a Wish List",
+                    "Wish from Any Website",
+                    "Baby Wishlist",
+                    "Discover Your Style",
+                    "Explore Showroom",
+                  ].map((item) => (
+                    <a
+                      href="#"
+                      key={item}
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      {item}
+                    </a>
+                  ))}
+                </div>
+
+                <div className="popup-column">
+                  <h3>Your Account</h3>
+
+                  {accountLinks.map((item) => (
+                    <Link
+                      to={item.path || "#"}
+                      key={item.name}
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+
+               
+                 {user && (
+  <>
+    <hr />
+    <a
+      href="#"
+      className="signout-link"
+      onClick={(e) => {
+        e.preventDefault();
+        handleLogout();
+      }}
+    >
+      Sign Out
+    </a>
+  </>
+)}
+                </div>
+
+              </div>
+            </div>
+          )}
         </div>
-      </header>
- 
+
+      
+        <div className="header-items">
+          <Link to="/orders" className="header-link">
+            <small>Returns</small>
+            <strong>&amp; Orders</strong>
+          </Link>
+        </div>
+
+     
+        <div className="header-items cart-wrapper">
+          <Link to="/cart" className="cart-box">
+            <span className="cart-icon-container">
+              <i className="bi bi-cart3"></i>
+
+              {cartCount > 0 && (
+                <span className="cart-count">
+                  {cartCount}
+                </span>
+              )}
+            </span>
+
+            <strong>Cart</strong>
+          </Link>
+        </div>
+
+      </div>
+    </header>
   );
 }
 
