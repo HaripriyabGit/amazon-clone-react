@@ -22,7 +22,7 @@ function Compare() {
 
   const products = selectedProducts
     .map((selected) => {
-      // Use the complete product object if available
+    
       if (selected && selected.name) {
         return selected;
       }
@@ -36,7 +36,7 @@ function Compare() {
     })
     .filter(Boolean);
 
-  // Weighted Product Scoring System
+  
   const getProductScores = (productList) => {
     const validProducts = productList.filter(
       (product) =>

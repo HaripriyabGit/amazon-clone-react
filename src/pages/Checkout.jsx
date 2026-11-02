@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
@@ -6,6 +7,24 @@ import "./Checkout.css";
 function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
+
+  // Check whether user came through Buy Now
+  const directCheckoutItem = JSON.parse(
+    localStorage.getItem("checkoutItem") || "null"
+  );
+
+  // Buy Now: show only selected product
+  // Cart Checkout: show all cart products
+  const checkoutItems = directCheckoutItem
+    ? [directCheckoutItem]
+    : cartItems;
+
+  // Calculate total based on checkout products
+  const checkoutTotal = checkoutItems.reduce(
+    (total, item) =>
+      total + Number(item.price || 0) * Number(item.quantity || 1),
+    0
+  );
 
   const [address, setAddress] = useState({
     name: "",
@@ -22,10 +41,12 @@ function Checkout() {
   const [payment, setPayment] = useState("Cash on Delivery");
   const [message, setMessage] = useState("");
 
-  const deliveryFee = cartTotal > 499 ? 0 : 40;
-  const marketplaceFee = cartItems.length > 0 ? 5 : 0;
-  const orderTotal = cartTotal + deliveryFee + marketplaceFee;
+  // Calculate charges
+  const deliveryFee = checkoutTotal > 499 ? 0 : 40;
+  const marketplaceFee = checkoutItems.length > 0 ? 5 : 0;
+  const orderTotal = checkoutTotal + deliveryFee + marketplaceFee;
 
+  // Handle address input
   const handleAddressChange = (e) => {
     setAddress({
       ...address,
@@ -33,6 +54,7 @@ function Checkout() {
     });
   };
 
+  // Save delivery address
   const saveAddress = (e) => {
     e.preventDefault();
 
@@ -50,8 +72,9 @@ function Checkout() {
     setShowAddressForm(false);
   };
 
+  // Place order
   const placeOrder = () => {
-    if (cartItems.length === 0) {
+    if (checkoutItems.length === 0) {
       alert("Your cart is empty!");
       navigate("/cart");
       return;
@@ -63,15 +86,46 @@ function Checkout() {
       return;
     }
 
-    setMessage(
-      "Order placed successfully! "
+    // Create order
+    const newOrder = {
+      id: `ORD${Date.now()}`,
+      date: new Date().toISOString(),
+      items: checkoutItems.map((item) => ({ ...item })),
+      address: { ...savedAddress },
+      payment: payment,
+      cartTotal: checkoutTotal,
+      deliveryFee: deliveryFee,
+      marketplaceFee: marketplaceFee,
+      orderTotal: orderTotal,
+      status: "Placed",
+    };
+
+    // Get existing orders
+    const existingOrders = JSON.parse(
+      localStorage.getItem("orders") || "[]"
     );
 
-    clearCart();
+    // Save new order
+    localStorage.setItem(
+      "orders",
+      JSON.stringify([newOrder, ...existingOrders])
+    );
+
+    // Remove Buy Now item or clear cart
+    if (directCheckoutItem) {
+      localStorage.removeItem("checkoutItem");
+    } else {
+      clearCart();
+    }
+
+    // Show success message
+    setMessage("Order placed successfully!");
   };
 
   return (
     <div className="checkout-page">
+
+      {/* Header */}
       <header className="checkout-header">
         <button
           className="checkout-logo"
@@ -94,13 +148,22 @@ function Checkout() {
         <div className="checkout-success">
           <h2>✓ {message}</h2>
           <p>Thank you for shopping with us!</p>
+
           <button onClick={() => navigate("/")}>
             Continue Shopping
+          </button>
+
+          <button onClick={() => navigate("/orders")}>
+            View Your Orders
           </button>
         </div>
       ) : (
         <main className="checkout-layout">
+
+          {/* Left Section */}
           <section className="checkout-left">
+
+            {/* Address */}
             <div className="checkout-section">
               <h3>1. Add delivery address</h3>
               <p>Enter your address to see delivery options.</p>
@@ -128,16 +191,15 @@ function Checkout() {
 
               {!savedAddress && (
                 <button
-  className="checkout-yellow-button"
-  onClick={() => setShowAddressForm(true)}
->
-  Add a new delivery address
-</button>
+                  className="checkout-yellow-button"
+                  onClick={() => setShowAddressForm(true)}
+                >
+                  Add a new delivery address
+                </button>
               )}
-
-              
             </div>
 
+            {/* Payment */}
             <div className="checkout-section">
               <h3>2. Payment method</h3>
 
@@ -159,20 +221,19 @@ function Checkout() {
                   </label>
                 ))}
               </div>
-
-              
             </div>
 
+            {/* Products */}
             <div className="checkout-section">
               <h3>3. Review items and shipping</h3>
 
-              {cartItems.length === 0 ? (
+              {checkoutItems.length === 0 ? (
                 <p>Your cart is empty.</p>
               ) : (
-                cartItems.map((item) => (
+                checkoutItems.map((item, index) => (
                   <div
                     className="checkout-product"
-                    key={item.id}
+                    key={item.id || index}
                   >
                     <img
                       src={item.image}
@@ -184,13 +245,15 @@ function Checkout() {
                         {item.title || item.name}
                       </strong>
 
-                      <p>Quantity: {item.quantity}</p>
+                      <p>
+                        Quantity: {item.quantity || 1}
+                      </p>
 
                       <strong>
                         ₹
                         {(
-                          (Number(item.price) || 0) *
-                          item.quantity
+                          Number(item.price || 0) *
+                          Number(item.quantity || 1)
                         ).toLocaleString("en-IN")}
                       </strong>
                     </div>
@@ -199,31 +262,35 @@ function Checkout() {
               )}
             </div>
 
+            {/* Help */}
             <div className="checkout-help">
               <p>
                 Need help? Review your order details before placing
                 your order.
               </p>
+
               <p>
                 This Amazon Clone is a frontend demonstration.
                 It does not create a real order or process payments.
               </p>
+
               <button onClick={() => navigate("/cart")}>
                 Back to cart
               </button>
             </div>
+
           </section>
 
+          {/* Order Summary */}
           <aside className="checkout-summary">
+
             <button
               className="checkout-yellow-button summary-place-order"
               onClick={placeOrder}
-              disabled={cartItems.length === 0}
+              disabled={checkoutItems.length === 0}
             >
-              Place your order
+              Proceed to Buy
             </button>
-
-           
 
             <hr />
 
@@ -231,15 +298,15 @@ function Checkout() {
 
             <div className="summary-row">
               <span>Items:</span>
-              <span>₹{cartTotal.toLocaleString("en-IN")}</span>
+              <span>
+                ₹{checkoutTotal.toLocaleString("en-IN")}
+              </span>
             </div>
 
             <div className="summary-row">
               <span>Delivery:</span>
               <span>
-                {deliveryFee === 0
-                  ? "FREE"
-                  : `₹${deliveryFee}`}
+                {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
               </span>
             </div>
 
@@ -262,14 +329,17 @@ function Checkout() {
                 ? "Payment method: Cash on Delivery"
                 : `Selected payment: ${payment} (demo only)`}
             </p>
+
           </aside>
         </main>
       )}
 
-
-      
+      {/* Address Modal */}
       {showAddressForm && (
-        <div className="address-modal-overlay" onClick={() => setShowAddressForm(false)}>
+        <div
+          className="address-modal-overlay"
+          onClick={() => setShowAddressForm(false)}
+        >
           <div
             className="address-modal"
             role="dialog"
@@ -278,7 +348,10 @@ function Checkout() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="address-modal-header">
-              <h2 id="address-modal-title">Add a new delivery address</h2>
+              <h2 id="address-modal-title">
+                Add a new delivery address
+              </h2>
+
               <button
                 type="button"
                 className="address-modal-close"
@@ -290,35 +363,91 @@ function Checkout() {
             </div>
 
             <form className="address-form" onSubmit={saveAddress}>
+
               <label>Full name</label>
-              <input name="name" value={address.name} onChange={handleAddressChange} required placeholder="Enter full name" />
+              <input
+                name="name"
+                value={address.name}
+                onChange={handleAddressChange}
+                required
+                placeholder="Enter full name"
+              />
 
               <label>Mobile number</label>
-              <input name="mobile" value={address.mobile} onChange={handleAddressChange} required maxLength={10} inputMode="numeric" placeholder="10-digit mobile number" />
+              <input
+                name="mobile"
+                value={address.mobile}
+                onChange={handleAddressChange}
+                required
+                maxLength={10}
+                inputMode="numeric"
+                placeholder="10-digit mobile number"
+              />
 
               <label>PIN code</label>
-              <input name="pincode" value={address.pincode} onChange={handleAddressChange} required maxLength={6} inputMode="numeric" placeholder="6-digit PIN code" />
+              <input
+                name="pincode"
+                value={address.pincode}
+                onChange={handleAddressChange}
+                required
+                maxLength={6}
+                inputMode="numeric"
+                placeholder="6-digit PIN code"
+              />
 
               <label>Flat, house number, building</label>
-              <input name="house" value={address.house} onChange={handleAddressChange} required placeholder="House / Flat number" />
+              <input
+                name="house"
+                value={address.house}
+                onChange={handleAddressChange}
+                required
+                placeholder="House / Flat number"
+              />
 
               <label>Area, street, village</label>
-              <input name="area" value={address.area} onChange={handleAddressChange} required placeholder="Street or area" />
+              <input
+                name="area"
+                value={address.area}
+                onChange={handleAddressChange}
+                required
+                placeholder="Street or area"
+              />
 
               <label>Town / City</label>
-              <input name="city" value={address.city} onChange={handleAddressChange} required placeholder="Enter city" />
+              <input
+                name="city"
+                value={address.city}
+                onChange={handleAddressChange}
+                required
+                placeholder="Enter city"
+              />
 
               <label>State</label>
-              <input name="state" value={address.state} onChange={handleAddressChange} required placeholder="Enter state" />
+              <input
+                name="state"
+                value={address.state}
+                onChange={handleAddressChange}
+                required
+                placeholder="Enter state"
+              />
 
               <div className="address-modal-actions">
-                <button type="button" className="checkout-cancel-button" onClick={() => setShowAddressForm(false)}>
+                <button
+                  type="button"
+                  className="checkout-cancel-button"
+                  onClick={() => setShowAddressForm(false)}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="checkout-yellow-button">
+
+                <button
+                  type="submit"
+                  className="checkout-yellow-button"
+                >
                   Use this address
                 </button>
               </div>
+
             </form>
           </div>
         </div>

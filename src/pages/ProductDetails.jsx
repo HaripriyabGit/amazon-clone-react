@@ -28,21 +28,17 @@ function ProductDetails() {
 
 };
 
-  const buyNow = () => {
-    const checkoutItem = {
-      ...product,
-      price,
-      quantity
-    };
-
-    localStorage.setItem(
-      "checkoutItem",
-      JSON.stringify(checkoutItem)
-    );
-
-    navigate("/checkout");
+const buyNow = () => {
+  const checkoutItem = {
+    ...product,
+    price,
+    quantity,
   };
 
+  localStorage.setItem("checkoutItem", JSON.stringify(checkoutItem));
+
+  navigate("/checkout");
+};
   return (
     <div className="amazon-product-page">
 
