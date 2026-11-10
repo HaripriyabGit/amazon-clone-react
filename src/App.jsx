@@ -5,6 +5,7 @@ import {
   Routes,
   Route,
   useLocation,
+  Link,
 } from "react-router-dom";
 
 import Header from "./components/Header";
@@ -26,17 +27,33 @@ import Orders from "./pages/Orders";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
 import ProductDetails from "./pages/ProductDetails";
+import Addresses from "./pages/Addresses";
+import Payments from "./pages/Payments";
+import Contact from "./pages/Contact";
+
+function NotFound() {
+  return (
+    <div className="pl-not-found">
+      <h2>We couldn't find that page</h2>
+      <Link to="/">Return to the homepage</Link>
+    </div>
+  );
+}
 
 function AppContent() {
   const location = useLocation();
 
-  const isLoginPage = location.pathname === "/login";
+  const isFocusedPage =
+    location.pathname === "/login" || location.pathname === "/checkout";
 
   return (
     <>
-      {!isLoginPage && <Header />}
-
-      {!isLoginPage && <CategoryNavbar />}
+      {!isFocusedPage && (
+        <div className="site-chrome">
+          <Header />
+          <CategoryNavbar />
+        </div>
+      )}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -71,13 +88,17 @@ function AppContent() {
        
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/addresses" element={<Addresses />} />
+        <Route path="/payments" element={<Payments />} />
+        <Route path="/contact" element={<Contact />} />
         <Route
   path="/product/:id"
   element={<ProductDetails />}
 />
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
-      <Footer />
+      {!isFocusedPage && <Footer />}
     </>
   );
 }

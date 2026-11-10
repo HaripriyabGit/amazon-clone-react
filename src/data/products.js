@@ -1,4 +1,7 @@
- const rawCards = [ 
+
+
+
+const rawCards = [ 
     {
       id: "smart-home",
       title: "Voice control your smart home",
@@ -622,9 +625,9 @@
           name: "Realme TWS",
         },
         {
-          id: "OnePlus-products",
+          id: "OnePlus-neckband",
           image: "https://m.media-amazon.com/images/I/61cxmDEW6uL._SR210,210_.png",
-          name: "OnePlus Neckband",
+          name: "OnePlus Bullets Wireless Z2",
         },
         {
           id: "Urbn-products",
@@ -1098,41 +1101,77 @@
 
 
   ];
-  export const cards = rawCards.map((category, categoryIndex) => ({
+  
+export const cards = rawCards.map((category, categoryIndex) => ({
   ...category,
 
   products: category.products.map((product, productIndex) => {
+    // Generate demo product price
     const price =
       499 + ((categoryIndex * 73 + productIndex * 31) % 20000);
 
+    // Generate discount
     const discount =
       10 + ((categoryIndex * 4 + productIndex * 3) % 41);
 
+    // Calculate original price
     const originalPrice = Math.round(
       price / (1 - discount / 100)
     );
 
+    // Generate rating
     const rating = Number(
-      (3.8 + ((categoryIndex + productIndex) % 10) / 10).toFixed(1)
+      (
+        3.8 +
+        ((categoryIndex + productIndex) % 10) / 10
+      ).toFixed(1)
     );
 
+    // Generate review count
     const reviewCount =
       120 + ((categoryIndex * 137 + productIndex * 83) % 4800);
 
+    // Generate bought count
     const boughtCount =
       100 + ((categoryIndex * 21 + productIndex * 97) % 3000);
 
     return {
       ...product,
+
+      // Product pricing
       price,
       originalPrice,
+      discount,
+
+      // Product ratings
       rating,
       reviewCount,
+
+      // Popularity
       bought: `${boughtCount}+ bought in past month`,
-      discount,
+
+      // Product information
+      brand: product.brand || "Generic",
+
+      description:
+        product.description ||
+        `${product.name} – Explore this product and its features.`,
+
       features: product.features || category.title,
+
+      highlights: product.highlights || [
+        `Quality ${product.name}`,
+        "Designed for everyday use",
+        "Convenient and easy to use",
+        "Explore more product details",
+      ],
+
+      // Delivery information
       delivery: product.delivery || "FREE delivery",
       freeShipping: product.freeShipping ?? true,
+
+      // Stock information
+      availability: product.availability || "In Stock",
     };
   }),
 }));

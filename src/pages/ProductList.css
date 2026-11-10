@@ -198,6 +198,18 @@
   accent-color: #007185;
 }
 
+.pl-open-product {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
 /* Product image */
 .pl-image-container {
   width: 100%;

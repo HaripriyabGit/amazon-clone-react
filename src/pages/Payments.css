@@ -1,0 +1,73 @@
+.payments-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  color: #0f1111;
+}
+
+.payments-crumb a {
+  color: #007185;
+  text-decoration: none;
+}
+
+.payments-page h1 {
+  margin: 10px 0;
+  font-weight: 400;
+}
+
+.payments-note,
+.payments-message {
+  color: #565959;
+  margin-bottom: 12px;
+}
+
+.payments-message {
+  color: #067d62;
+}
+
+.payments-list article,
+.payments-form {
+  background: #fff;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.payments-list span {
+  color: #067d62;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.payments-list button,
+.payments-form button {
+  margin-top: 8px;
+  margin-right: 8px;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  background: #fff;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.payments-form button {
+  background: #ffd814;
+  border-color: #fcd200;
+}
+
+.payments-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.payments-form input,
+.payments-form select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  height: 34px;
+  font-weight: 400;
+}

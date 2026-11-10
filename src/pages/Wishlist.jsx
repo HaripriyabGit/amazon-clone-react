@@ -1,13 +1,35 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Wishlist.css";
+import { useCart } from "./CartContext";
+import { productPath } from "../data/catalog";
+import ProductImage from "../components/ProductImage";
+import { readJson } from "../utils/session";
 
 function Wishlist() {
+  const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState("lists");
   const [showForm, setShowForm] = useState(false);
   const [listName, setListName] = useState("");
-  const [lists, setLists] = useState([]);
+  const [lists, setLists] = useState(() => readJson(localStorage, "wishlists", []));
+  const [savedItems, setSavedItems] = useState(() =>
+    readJson(localStorage, "wishlistItems", [])
+  );
+
+  useEffect(() => {
+    const syncItems = () => {
+      setSavedItems(readJson(localStorage, "wishlistItems", []));
+      setLists(readJson(localStorage, "wishlists", []));
+    };
+
+    window.addEventListener("wishlistUpdated", syncItems);
+    window.addEventListener("storage", syncItems);
+    return () => {
+      window.removeEventListener("wishlistUpdated", syncItems);
+      window.removeEventListener("storage", syncItems);
+    };
+  }, []);
   const [message, setMessage] = useState("");
 
   const createList = (e) => {
@@ -20,7 +42,11 @@ function Wishlist() {
       return;
     }
 
-    setLists((previous) => [...previous, name]);
+    setLists((previous) => {
+      const next = [...previous, name];
+      localStorage.setItem("wishlists", JSON.stringify(next));
+      return next;
+    });
     setListName("");
     setShowForm(false);
     setActiveTab("lists");
@@ -136,14 +162,49 @@ function Wishlist() {
 
             <section className="wishlist-saved-lists">
               {lists.map((list, index) => (
-                <Link
-                  // to={`/wishlist/${encodeURIComponent(list)}`}
-                  // key={`${list}-${index}`}
-                >
-                  {list}
-                </Link>
+                <p key={`${list}-${index}`}>{list}</p>
               ))}
             </section>
+
+            {savedItems.length > 0 && (
+              <section className="wishlist-items">
+                <h2>Saved items</h2>
+                <div className="wishlist-item-grid">
+                  {savedItems.map((item) => (
+                    <div className="wishlist-saved-card" key={item.id}>
+                      <Link to={productPath(item.id)}>
+                        <ProductImage src={item.image} alt={item.name} />
+                        <span>{item.name}</span>
+                        <strong>₹{Number(item.price || 0).toLocaleString("en-IN")}</strong>
+                      </Link>
+                      <div className="wishlist-saved-actions">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addToCart(item);
+                            setMessage(`${item.name} added to cart`);
+                          }}
+                        >
+                          Add to Cart
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = savedItems.filter(
+                              (saved) => String(saved.id) !== String(item.id)
+                            );
+                            setSavedItems(next);
+                            localStorage.setItem("wishlistItems", JSON.stringify(next));
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         ) : (
           <section className="wishlist-friends">

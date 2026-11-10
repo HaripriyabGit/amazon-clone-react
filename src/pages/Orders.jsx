@@ -1,16 +1,20 @@
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Orders.css";
+import { useCart } from "./CartContext";
+import { productPath } from "../data/catalog";
+import { readJson } from "../utils/session";
 
 function Orders() {
+  const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState("Orders");
   const [dateFilter, setDateFilter] = useState("last30");
   const [search, setSearch] = useState("");
 
   // Load orders from localStorage
   const [orders, setOrders] = useState(() =>
-    JSON.parse(localStorage.getItem("orders") || "[]")
+    readJson(localStorage, "orders", [])
   );
 
   // Cancel order
@@ -81,6 +85,19 @@ function Orders() {
     return matchesSearch && matchesDate && matchesTab;
   });
 
+  const buyAgainItems = useMemo(() => {
+    const seen = new Set();
+    return orders
+      .filter((order) => order.status !== "Cancelled")
+      .flatMap((order) => order.items || [])
+      .filter((item) => {
+        const key = String(item.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [orders]);
+
   const tabs = ["Orders", "Buy Again", "Not Yet Shipped"];
 
   return (
@@ -142,7 +159,41 @@ function Orders() {
           </select>
         </div>
 
-        {filteredOrders.length === 0 ? (
+        {activeTab === "Buy Again" ? (
+          buyAgainItems.length === 0 ? (
+            <div className="orders-empty">
+              <p>You have no previously purchased items to buy again.</p>
+              <Link to="/">View products and start shopping</Link>
+            </div>
+          ) : (
+            <div className="orders-list">
+              {buyAgainItems.map((item) => (
+                <div className="order-card" key={item.id}>
+                  <div className="order-card-body">
+                    <div className="ordered-product">
+                      <img src={item.image} alt={item.name || item.title} />
+                      <div className="ordered-product-details">
+                        <Link to={productPath(item.id)}>
+                          <strong>{item.name || item.title}</strong>
+                        </Link>
+                        <p>
+                          ₹{Number(item.price || 0).toLocaleString("en-IN")}
+                        </p>
+                        <button
+                          type="button"
+                          className="buy-again-button"
+                          onClick={() => addToCart({ ...item, quantity: 1 })}
+                        >
+                          Buy again
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : filteredOrders.length === 0 ? (
           <div className="orders-empty">
             {search.trim() ? (
               <p>No orders found matching "{search}".</p>
@@ -229,8 +280,8 @@ function Orders() {
                   <div className="order-delivery-details">
                     <strong>Delivery Address</strong>
 
-                    <p>{order.address.name}</p>
-                    <p>{order.address.mobile}</p>
+                    <p>{order.address?.name}</p>
+                    <p>{order.address?.mobile}</p>
 
                     <p>
                       {order.address.house}, {order.address.area}

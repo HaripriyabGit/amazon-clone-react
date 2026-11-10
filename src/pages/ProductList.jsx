@@ -1,7 +1,8 @@
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { cards } from "../data/products";
+import { cards, categoryPath, productPath } from "../data/catalog";
+import ProductImage from "../components/ProductImage";
 import "./ProductList.css";
 import { useCart } from "./CartContext";
 
@@ -11,32 +12,31 @@ function ProductList() {
   const navigate = useNavigate();
 
   const [sortBy, setSortBy] = useState("default");
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const [maxPrice, setMaxPrice] = useState(80000);
   const [minRating, setMinRating] = useState(0);
   const [search, setSearch] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [freeShippingOnly, setFreeShippingOnly] = useState(false);
+  const [brand, setBrand] = useState("All");
   const [cartMessage, setCartMessage] = useState("");
+
+  useEffect(() => {
+    setSearch("");
+    setSortBy("default");
+    setBrand("All");
+    setSelectedProducts([]);
+    setMaxPrice(80000);
+    setMinRating(0);
+    setFreeShippingOnly(false);
+  }, [id]);
 
   const currentCategory = cards.find(
     (card) => String(card.id) === String(id)
   );
 
   const products = useMemo(() => {
-    return (currentCategory?.products || []).map((product, index) => ({
-      ...product,
-      id: `${id}-${product.id ?? index}`,
-      price: product.price ?? null,
-      originalPrice: product.originalPrice ?? null,
-      rating: product.rating ?? null,
-      reviewCount: product.reviewCount ?? null,
-      bought: product.bought ?? "",
-      features: product.features ?? "",
-      delivery: product.delivery ?? "",
-      discount: product.discount ?? null,
-      freeShipping: product.freeShipping ?? false,
-    }));
-  }, [currentCategory, id]);
+    return currentCategory?.products || [];
+  }, [currentCategory]);
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
@@ -54,11 +54,14 @@ function ProductList() {
       const matchesShipping =
         !freeShippingOnly || product.freeShipping === true;
 
+      const matchesBrand = brand === "All" || product.brand === brand;
+
       return (
         matchesSearch &&
         matchesPrice &&
         matchesRating &&
-        matchesShipping
+        matchesShipping &&
+        matchesBrand
       );
     });
 
@@ -84,6 +87,10 @@ function ProductList() {
       );
     }
 
+    if (sortBy === "discount") {
+      result.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
+    }
+
     return result;
   }, [
     products,
@@ -92,6 +99,7 @@ function ProductList() {
     minRating,
     sortBy,
     freeShippingOnly,
+    brand,
   ]);
 
   const toggleCompare = (productId) => {
@@ -109,12 +117,18 @@ function ProductList() {
   };
 
   const clearFilters = () => {
-    setMaxPrice(50000);
+    setMaxPrice(80000);
     setMinRating(0);
     setSortBy("default");
     setSearch("");
     setFreeShippingOnly(false);
+    setBrand("All");
   };
+
+  const brands = useMemo(
+    () => ["All", ...new Set(products.map((product) => product.brand).filter(Boolean))],
+    [products]
+  );
 
   const formatPrice = (price) =>
     `₹${Number(price).toLocaleString("en-IN")}`;
@@ -159,10 +173,10 @@ function ProductList() {
       <nav className="pl-category-nav">
         <strong>Shop by Category</strong>
 
-        {cards.slice(0, 8).map((category) => (
+        {cards.map((category) => (
           <Link
             key={category.id}
-            to={`/category/${category.id}`}
+            to={categoryPath(category.id)}
             className={
               String(category.id) === String(id) ? "active" : ""
             }
@@ -185,6 +199,7 @@ function ProductList() {
             <option value="low">Price: Low to High</option>
             <option value="high">Price: High to Low</option>
             <option value="rating">Customer Rating</option>
+            <option value="discount">Discount</option>
           </select>
         </label>
       </div>
@@ -225,6 +240,21 @@ function ProductList() {
 
           <hr />
 
+          <h4>Brand</h4>
+          <select
+            className="pl-search"
+            value={brand}
+            onChange={(event) => setBrand(event.target.value)}
+          >
+            {brands.map((item) => (
+              <option key={item} value={item}>
+                {item === "All" ? "All brands" : item}
+              </option>
+            ))}
+          </select>
+
+          <hr />
+
           <h4>Price</h4>
 
           <label>
@@ -235,7 +265,7 @@ function ProductList() {
             className="pl-price-range"
             type="range"
             min="100"
-            max="50000"
+            max="80000"
             step="500"
             value={maxPrice}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
@@ -292,17 +322,21 @@ function ProductList() {
                   Compare
                 </label>
 
-                <div className="pl-image-container">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    onError={(e) => {
-                      e.currentTarget.style.visibility = "hidden";
-                    }}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="pl-open-product"
+                  onClick={() =>
+                    navigate(productPath(product.id), {
+                      state: { product },
+                    })
+                  }
+                >
+                  <div className="pl-image-container">
+                    <ProductImage src={product.image} alt={product.name} />
+                  </div>
 
-                <h4 className="pl-product-name">{product.name}</h4>
+                  <h4 className="pl-product-name">{product.name}</h4>
+                </button>
 
              
                 <div className="pl-rating">

@@ -1,262 +1,205 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { categoryPath, navCategories } from "../data/catalog";
+import { readUser } from "../utils/session";
 
 function CategoryNavbar() {
-   const navigate = useNavigate();
-
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userName, setUserName] = useState("sign in");
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+
+
+  useEffect(() => {
+    const openMenu = () => setIsSidebarOpen(true);
+    const syncUser = () => {
+      try {
+        const user = readUser();
+        setUserName(user?.name || user?.emailOrPhone || "sign in");
+      } catch {
+        setUserName("sign in");
+      }
+    };
+
+    syncUser();
+    window.addEventListener("openAmazonMenu", openMenu);
+    window.addEventListener("userLoggedIn", syncUser);
+    window.addEventListener("storage", syncUser);
+
+    return () => {
+      window.removeEventListener("openAmazonMenu", openMenu);
+      window.removeEventListener("userLoggedIn", syncUser);
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
+
+  const openCategory = (categoryId) => {
+    setIsSidebarOpen(false);
+    navigate(categoryPath(categoryId));
+  };
 
   return (
     <>
       <nav className="category-navbar">
+  {/* Desktop Navigation */}
+  <div className="category-container desktop-category-nav">
+    <button
+      type="button"
+      className="nav-item menu-item"
+      onClick={() => setIsSidebarOpen(true)}
+    >
+      <strong>☰ All</strong>
+    </button>
 
-        <div className="category-container">
+    {navCategories.map((item) => (
+      <button
+        type="button"
+        className="nav-item"
+        key={item.categoryId}
+        onClick={() => openCategory(item.categoryId)}
+      >
+        {item.label}
+      </button>
+    ))}
+  </div>
 
-         
-          <div
-            className="nav-item menu-item"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <strong>☰ All</strong>
-          </div>
+  {/* Mobile Home Navigation */}
+  {isHomePage && (
+    <div className="mobile-home-nav">
+      <button onClick={() => setIsSidebarOpen(true)}>
+        Shop By <br /> Category
+      </button>
+     &nbsp;&nbsp;&nbsp;
+      <button onClick={() => openCategory("")}>
+        Deals 
+      </button> &nbsp;&nbsp;&nbsp;
 
-          <div className="nav-item">
-            Amazon Pay
-          </div>
-
-          <div className="nav-item">
-            Mobiles
-          </div>
-
-          <div className="nav-item">
-            Today's Deals
-          </div>
-
-          <div className="nav-item">
-            Coupons
-          </div>
-
-          <div className="nav-item">
-            Flights
-          </div>
-
-          <div className="nav-item">
-            Electronics
-          </div>
-
-          <div className="nav-item">
-            Video Games
-          </div>
-
-          <div className="nav-item">
-            Computers
-          </div>
-
-          <div className="nav-item">
-            New Releases
-          </div>
-
-          <div className="nav-item">
-            Bestsellers
-          </div>
-
-          <div className="nav-item">
-            Baby
-          </div>
-
-          <div className="nav-item">
-            Fashion
-          </div>
-
-          <div className="nav-item">
-            Home & Kitchen
-          </div>
-
-        </div>
-
-      </nav>
-
-
-     
+      <button onClick={() => navigate("")}>
+        Sell
+      </button>
+    </div>
+  )}
+</nav>
 
       {isSidebarOpen && (
-
         <div className="sidebar-wrapper">
-
-        
           <div
             className="sidebar-overlay"
             onClick={() => setIsSidebarOpen(false)}
           ></div>
 
-
-         
           <div className="amazon-sidebar">
-
-           
             <div className="sidebar-header">
-
-              <div className="sidebar-user">
-                <span className="user-icon">
-                  👤
-                </span>
-
-                <strong>
-                  Hello, sign in
-                </strong>
-              </div>
-
+              <button
+                type="button"
+                className="sidebar-user"
+                onClick={() => {
+                  setIsSidebarOpen(false);
+                  navigate(userName === "sign in" ? "/login" : "/account");
+                }}
+              >
+                <span className="user-icon">👤</span>
+                <strong>Hello, {userName}</strong>
+              </button>
 
               <button
+                type="button"
                 className="sidebar-close"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 ×
               </button>
-
             </div>
-
-
-           
 
             <div className="sidebar-content">
-
-             
-
               <div className="sidebar-section">
-
-                <h3>
-                  Trending
-                </h3>
-
-                <div className="sidebar-link">
+                <h3>Trending</h3>
+                <button type="button" className="sidebar-link" onClick={() => openCategory("bestsellers-products")}>
                   Bestsellers
-                </div>
-
-                <div className="sidebar-link">
+                </button>
+                <button type="button" className="sidebar-link" onClick={() => openCategory("sales-products")}>
                   New Releases
-                </div>
-
+                </button>
               </div>
-
-
-             
 
               <div className="sidebar-section">
-
-                <h3>
-                  Digital Content and Devices
-                </h3>
-
-                <div className="sidebar-link arrow">
-                  <span>Echo & Alexa</span>
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                  <span>Fire TV</span>
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                  <span>Kindle E-Readers & eBooks</span>
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                  <span>Audible Audiobooks</span>
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                  <span>Amazon Prime Video</span>
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                  <span>Amazon Music</span>
-                  <span>›</span>
-                </div>
-
+                <h3>Digital Content and Devices</h3>
+                {[
+                  ["Echo & Alexa", "smart-home"],
+                  ["Fire TV", "home-entertainment"],
+                  ["Headphones", "headphone-products"],
+                  ["Cameras", "cameras"],
+                  ["Computers", "Premium-products"],
+                  ["Mobiles", "mobile-products"],
+                ].map(([label, categoryId]) => (
+                  <button
+                    type="button"
+                    className="sidebar-link arrow"
+                    key={categoryId}
+                    onClick={() => openCategory(categoryId)}
+                  >
+                    <span>{label}</span>
+                    <span>›</span>
+                  </button>
+                ))}
               </div>
 
-
-           
-
-               <div className="sidebar-section">
-
-                <h3>
-                 Programs & Features
-                </h3>
-
-                <div className="sidebar-link arrow">
-                
-                  Gift Cards & Mobile Recharges
-
-
-
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                 Amazon Launchpad
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-                 Amazon Business
-                  <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-               Handloom and Handicrafts
-                  <span>›</span>
-                </div>
-
-              </div>
               <div className="sidebar-section">
+                <h3>Shop by Department</h3>
+                {navCategories.map((item) => (
+                  <button
+                    type="button"
+                    className="sidebar-link arrow"
+                    key={item.categoryId}
+                    onClick={() => openCategory(item.categoryId)}
+                  >
+                    <span>{item.label}</span>
+                    <span>›</span>
+                  </button>
+                ))}
+              </div>
 
-                <h3>
-                 Help & Settings
-
-
-
-                </h3>
-
-                <div className="sidebar-link arrow">
-                
-              Your Account
-
-
-
+              <div className="sidebar-section">
+                <h3>Help & Settings</h3>
+                <button
+                  type="button"
+                  className="sidebar-link arrow"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    navigate("/account");
+                  }}
+                >
+                  <span>Your Account</span>
                   <span>›</span>
-                </div>
-
-                <div className="sidebar-link arrow">
-              Customer Service
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-link arrow"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    navigate("/orders");
+                  }}
+                >
+                  <span>Customer Service</span>
                   <span>›</span>
-                </div>
-                <div className="sidebar-link arrow">
-                    <div
-      className=""
-      onClick={() => navigate("/login")}
-    >
-      Sign in
-    </div>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-link arrow"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    navigate("/login");
+                  }}
+                >
+                  <span>Sign in</span>
                   <span>›</span>
-                </div>
-         
-
+                </button>
+              </div>
             </div>
-
-            </div>
-
           </div>
-
         </div>
-
       )}
-
     </>
   );
 }
