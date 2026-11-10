@@ -1,77 +1,127 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../pages/CartContext";
+import {
+  clearUser,
+  readDeliveryLocation,
+  readJson,
+  readLanguage,
+  readUser,
+  saveDeliveryLocation,
+  saveLanguage,
+} from "../utils/session";
+
+const languages = [
+  ["English - EN", "en"],
+  ["हिन्दी - HI", "hi"],
+  ["தமிழ் - TA", "ta"],
+  ["తెలుగు - TE", "te"],
+  ["ಕನ್ನಡ - KN", "kn"],
+  ["മലയാളം - ML", "ml"],
+  ["বাংলা - BN", "bn"],
+  ["मराठी - MR", "mr"],
+];
 
 function Header() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { cartCount } = useCart();
 
   const [languageOpen, setLanguageOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] =
-    useState("All Categories");
+    useState("All ");
+  const [language, setLanguage] = useState(readLanguage);
+  const [location, setLocation] = useState(readDeliveryLocation);
+  const [pinDraft, setPinDraft] = useState(location.pincode);
+  const [cityDraft, setCityDraft] = useState(location.city);
+  const [recentSearches, setRecentSearches] = useState(() =>
+    readJson(localStorage, "recentSearches", [])
+  );
 
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user")) || null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(readUser);
 
   useEffect(() => {
-    const updateUser = () => {
-      try {
-        setUser(JSON.parse(localStorage.getItem("user")) || null);
-      } catch {
-        setUser(null);
-      }
-    };
+    const updateUser = () => setUser(readUser());
+    const updateLanguage = () => setLanguage(readLanguage());
+    const updateLocation = () => setLocation(readDeliveryLocation());
 
     window.addEventListener("userLoggedIn", updateUser);
+    window.addEventListener("languageChanged", updateLanguage);
+    window.addEventListener("locationChanged", updateLocation);
     window.addEventListener("storage", updateUser);
 
     return () => {
       window.removeEventListener("userLoggedIn", updateUser);
+      window.removeEventListener("languageChanged", updateLanguage);
+      window.removeEventListener("locationChanged", updateLocation);
       window.removeEventListener("storage", updateUser);
     };
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    setSearchText(searchParams.get("q") || "");
+    const category = searchParams.get("category");
+    if (category) setSelectedCategory(category);
+  }, [searchParams]);
+
+  const handleSearch = (event) => {
+    event.preventDefault();
 
     const query = searchText.trim();
 
-    if (!query) return;
+    if (!query && selectedCategory === "All Categories") return;
 
+    if (query) {
+      const next = [query, ...recentSearches.filter((item) => item !== query)].slice(0, 6);
+      setRecentSearches(next);
+      localStorage.setItem("recentSearches", JSON.stringify(next));
+    }
+
+    setSuggestOpen(false);
     navigate(
       `/search?q=${encodeURIComponent(query)}&category=${encodeURIComponent(selectedCategory)}`
     );
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    clearUser();
     setUser(null);
     setAccountOpen(false);
     navigate("/");
+  };
+
+  const saveLocation = (event) => {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(pinDraft.trim())) return;
+
+    const next = {
+      city: cityDraft.trim() || "India",
+      pincode: pinDraft.trim(),
+    };
+    saveDeliveryLocation(next);
+    setLocation(next);
+    setLocationOpen(false);
   };
 
   const accountLinks = [
     { name: "Your Account", path: "/account" },
     { name: "Your Orders", path: "/orders" },
     { name: "Your Wish List", path: "/wishlist" },
-    { name: "Keep shopping for", path: "" },
+    { name: "Keep shopping for", path: "/" },
     { name: "Your Recommendations", path: "" },
-    { name: "Returns", path: "/orders" },
-    { name: "Your Prime Membership", path: "" },
-    { name: "Your Prime Video", path: "" },
+    { name: "Returns", path: "" },
+    { name: "Your Addresses", path: "" },
+    { name: "Payment Options", path: "" },
     { name: "Your Subscribe & Save Items", path: "" },
     { name: "Memberships & Subscriptions", path: "" },
     { name: "Your Seller Account", path: "" },
     { name: "Manage Your Content and Devices", path: "" },
-    { name: "Your Music Library", path: "" },
+    { name: "Contact Us", path: "" },
     { name: "Register for a free Business Account", path: "" },
   ];
 
@@ -80,24 +130,70 @@ function Header() {
       <div className="header-container">
 
     
-        <div className="header-items">
-          <Link to="/" className="amazon-logo">
-            <img
-              src="/amazon-logo-main.png"
-              className="header-logo"
-              alt="Amazon"
-            />
-          </Link>
-        </div>
+       <div className="header-items logo-wrapper">
+  <button
+    type="button"
+    className="mobile-menu-btn"
+    aria-label="Open menu"
+    onClick={() => window.dispatchEvent(new Event("openAmazonMenu"))}
+  >
+    <i className="bi bi-list"></i>
+  </button>
+
+  <Link to="/" className="amazon-logo">
+    <img
+      src="/amazon-logo.png"
+      className="header-logo"
+      alt="Amazon"
+    />
+  </Link>
+</div>
 
        
         <div className="header-items">
           <div className="location-box">
-            <small>Delivering to Kottayam 686019</small>
-            <strong>
-              <i className="bi bi-geo-alt"></i>
-              Update location
-            </strong>
+            <button
+              type="button"
+              className="location-box"
+              onClick={() => setLocationOpen((open) => !open)}
+            >
+              <small>
+                Delivering to {location.city} {location.pincode}
+              </small>
+              <strong>
+                <i className="bi bi-geo-alt"></i>
+                Update location
+              </strong>
+            </button>
+
+            {locationOpen && (
+              <form className="location-panel" onSubmit={saveLocation}>
+                <label>
+                  City
+                  <input
+                    value={cityDraft}
+                    onChange={(event) => setCityDraft(event.target.value)}
+                  />
+                </label>
+                <label>
+                  PIN code
+                  <input
+                    value={pinDraft}
+                    inputMode="numeric"
+                    maxLength={6}
+                    onChange={(event) => setPinDraft(event.target.value)}
+                  />
+                </label>
+                <button type="submit">Apply</button>
+                <button
+                  type="button"
+                  className="location-cancel"
+                  onClick={() => setLocationOpen(false)}
+                >
+                  Cancel
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
@@ -107,8 +203,14 @@ function Header() {
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             aria-label="Select product category"
-          >
+          style={{
+  width: `${Math.min(
+    Math.max(selectedCategory.length * 7 + 35, 55),
+    200
+  )}px`
+}}>
             {[
+              "All",
               "All Categories",
               "Alexa Skills",
               "Amazon Devices",
@@ -150,12 +252,35 @@ function Header() {
             placeholder="Search Amazon.in"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            onFocus={() => setSuggestOpen(true)}
+            onBlur={() => window.setTimeout(() => setSuggestOpen(false), 150)}
             aria-label="Search products"
           />
 
           <button type="submit" className="search-btn" aria-label="Search">
             <i className="bi bi-search"></i>
           </button>
+
+          {suggestOpen && recentSearches.length > 0 && (
+            <div className="search-suggest">
+              {recentSearches.map((item) => (
+                <button
+                  type="button"
+                  key={item}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    setSearchText(item);
+                    setSuggestOpen(false);
+                    navigate(
+                      `/search?q=${encodeURIComponent(item)}&category=${encodeURIComponent(selectedCategory)}`
+                    );
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          )}
         </form>
 
     
@@ -165,7 +290,7 @@ function Header() {
           onMouseLeave={() => setLanguageOpen(false)}
         >
           <span className="india-flag">🇮🇳</span>
-          <strong>EN</strong>
+          <strong>{language.toUpperCase()}</strong>
           <span className="language-arrow">▾</span>
 
           {languageOpen && (
@@ -177,22 +302,17 @@ function Header() {
                 </a>
               </h3>
 
-              {[
-                ["English - EN", "en"],
-                ["हिन्दी - HI", "hi"],
-                ["தமிழ் - TA", "ta"],
-                ["తెలుగు - TE", "te"],
-                ["ಕನ್ನಡ - KN", "kn"],
-                ["മലയാളം - ML", "ml"],
-                ["বাংলা - BN", "bn"],
-                ["मराठी - MR", "mr"],
-              ].map(([label, value], index) => (
+              {languages.map(([label, value]) => (
                 <label className="language-option" key={value}>
                   <input
                     type="radio"
-                    name="language"
+                    name="header-language"
                     value={value}
-                    defaultChecked={index === 0}
+                    checked={language === value}
+                    onChange={() => {
+                      setLanguage(value);
+                      saveLanguage(value);
+                    }}
                   />
                   <span>{label}</span>
                 </label>
@@ -223,11 +343,19 @@ function Header() {
           onMouseLeave={() => setAccountOpen(false)}
         >
           <div className="account">
-          <small>
-  Hello, {user ? (user.name || user.emailOrPhone) : "sign in"}
-</small>
-            <strong>Account & Lists ▾</strong>
-          </div>
+  <div className="desktop-account">
+    <small>
+      Hello, {user ? (user.name || user.emailOrPhone) : "sign in"}
+    </small> <br></br>
+    <strong>Account & Lists ▾</strong>
+  </div>
+
+  <Link to={user ? "/account" : "/login"} className="mobile-signin">
+    <span> {user ? (user.name || user.emailOrPhone) : "sign in"}</span>
+    <i className="bi bi-person"></i>
+  </Link>
+</div>
+         
 
           {accountOpen && (
             <div className="account-popup">
@@ -273,13 +401,13 @@ function Header() {
                     "Discover Your Style",
                     "Explore Showroom",
                   ].map((item) => (
-                    <a
-                      href="#"
+                    <Link
+                      to="/wishlist"
                       key={item}
-                      onClick={(e) => e.preventDefault()}
+                      onClick={() => setAccountOpen(false)}
                     >
                       {item}
-                    </a>
+                    </Link>
                   ))}
                 </div>
 
@@ -329,21 +457,20 @@ function Header() {
 
      
         <div className="header-items cart-wrapper">
-          <Link to="/cart" className="cart-box">
-            <span className="cart-icon-container">
-              <i className="bi bi-cart3"></i>
+  <Link to="/cart" className="cart-box">
 
-              {cartCount > 0 && (
-                <span className="cart-count">
-                  {cartCount}
-                </span>
-              )}
-            </span>
+    <span className="cart-icon-container">
+      <i className="bi bi-cart3"></i>
 
-            <strong>Cart</strong>
-          </Link>
-        </div>
+      <span className="cart-count">
+        {cartCount}
+      </span>
+    </span>
 
+    <strong>Cart</strong>
+
+  </Link>
+</div>
       </div>
     </header>
   );

@@ -1,0 +1,94 @@
+.addresses-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  color: #0f1111;
+}
+
+.addresses-crumb a {
+  color: #007185;
+  text-decoration: none;
+}
+
+.addresses-page h1 {
+  margin: 10px 0;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.addresses-note,
+.addresses-message {
+  margin-bottom: 14px;
+  color: #565959;
+}
+
+.addresses-message {
+  color: #067d62;
+}
+
+.addresses-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+}
+
+.address-card,
+.address-form-card {
+  background: #fff;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.address-default {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #067d62;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.address-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.address-actions button,
+.address-form-card button {
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.address-form-card button {
+  background: #ffd814;
+  border-color: #fcd200;
+}
+
+.address-form-card label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.address-form-card input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  height: 34px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-weight: 400;
+}
+
+@media (max-width: 800px) {
+  .addresses-layout {
+    grid-template-columns: 1fr;
+  }
+}

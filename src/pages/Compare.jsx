@@ -1,17 +1,23 @@
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { cards } from "../data/products";
+import { cards, productPath } from "../data/catalog";
 import "./Compare.css";
 import { useCart } from "./CartContext";
+import ProductImage from "../components/ProductImage";
 
 function Compare() {
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const [notice, setNotice] = useState("");
 
-  const selectedProducts = JSON.parse(
-    sessionStorage.getItem("compareProducts") || "[]"
-  );
+  const [selectedProducts, setSelectedProducts] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("compareProducts") || "[]");
+    } catch {
+      return [];
+    }
+  });
 
   const allProducts = cards.flatMap((category) =>
     category.products.map((product) => ({
@@ -20,9 +26,9 @@ function Compare() {
     }))
   );
 
-  const products = selectedProducts
+ const products = useMemo(() => {
+  return selectedProducts
     .map((selected) => {
-    
       if (selected && selected.name) {
         return selected;
       }
@@ -35,7 +41,7 @@ function Compare() {
       );
     })
     .filter(Boolean);
-
+}, [selectedProducts, allProducts]);
   
   const getProductScores = (productList) => {
     const validProducts = productList.filter(
@@ -115,16 +121,16 @@ function Compare() {
     rankedProducts.find((item) => item.id === product.id);
 
   const removeProduct = (id) => {
-    const updatedProducts = selectedProducts.filter(
-      (product) => String(product.id) !== String(id)
-    );
+    const updatedProducts = selectedProducts.filter((product) => {
+      const productId = typeof product === "object" ? product.id : product;
+      return String(productId) !== String(id);
+    });
 
     sessionStorage.setItem(
       "compareProducts",
       JSON.stringify(updatedProducts)
     );
-
-    window.location.reload();
+    setSelectedProducts(updatedProducts);
   };
 
   const formatPrice = (price) =>
@@ -166,7 +172,7 @@ function Compare() {
                       Remove ×
                     </button>
 
-                    <img
+                    <ProductImage
                       className="compare-product-image"
                       src={product.image}
                       alt={product.name}
@@ -326,7 +332,10 @@ function Compare() {
                 <td key={product.id}>
                   <button
   className="compare-cart-button"
-  onClick={() => addToCart(product)}
+  onClick={() => {
+    addToCart(product);
+    setNotice(`${product.name} added to cart`);
+  }}
 >
   Add to Cart
 </button>
@@ -358,7 +367,7 @@ function Compare() {
 
           <h3>Best Overall Product</h3>
 
-          <img
+          <ProductImage
             src={bestProduct.image}
             alt={bestProduct.name}
           />
@@ -392,6 +401,13 @@ function Compare() {
 
       {/* Comparison Table */}
       
+      {notice && <p className="compare-subtitle">{notice}</p>}
+      <button
+        className="compare-back-button"
+        onClick={() => navigate(productPath(products[0].id))}
+      >
+        View first product
+      </button>
       <button
         className="compare-back-button"
         onClick={() => navigate(-1)}

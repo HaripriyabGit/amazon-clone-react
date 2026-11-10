@@ -1,8 +1,28 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import "./Footer.css";
+import { readLanguage, saveLanguage } from "../utils/session";
+
+const footerLanguages = [
+  ["English - EN", "en"],
+  ["हिन्दी - HI", "hi"],
+  ["தமிழ் - TA", "ta"],
+  ["తెలుగు - TE", "te"],
+  ["ಕನ್ನಡ - KN", "kn"],
+  ["മലയാളം - ML", "ml"],
+  ["বাংলা - BN", "bn"],
+  ["मराठी - MR", "mr"],
+];
 
 function Footer() {
    const [languageOpen, setLanguageOpen] = useState(false);
+   const [language, setLanguage] = useState(readLanguage);
+
+   useEffect(() => {
+     const sync = () => setLanguage(readLanguage());
+     window.addEventListener("languageChanged", sync);
+     return () => window.removeEventListener("languageChanged", sync);
+   }, []);
   return (
     <footer className="footer">
 
@@ -57,12 +77,12 @@ function Footer() {
         <div className="footer-column">
           <h3>Let Us Help You</h3>
 
-          <a href="#">Your Account</a>
-          <a href="#">Returns Centre</a>
+          <Link to="/account">Your Account</Link>
+          <Link to="/orders">Returns Centre</Link>
           <a href="#">Recalls and Product Safety Alerts</a>
           <a href="#">100% Purchase Protection</a>
           <a href="#">Amazon App Download</a>
-          <a href="#">Help</a>
+          <Link to="/contact">Help</Link>
         </div>
 
       </div>
@@ -87,7 +107,7 @@ function Footer() {
       className="footer-select"
       onClick={() => setLanguageOpen(!languageOpen)}
     >
-      🌐 &nbsp; English
+      🌐 &nbsp; {footerLanguages.find(([, code]) => code === language)?.[0] || "English"}
      
     </button>
 
@@ -99,70 +119,20 @@ function Footer() {
         <h5>Change Language <a href="">Learn more</a></h5>
            <hr />
 
-        <label>
-          <input
-            type="radio"
-            name="language"
-            defaultChecked
-          />
-          English - EN
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          हिन्दी - HI
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          தமிழ் - TA
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          తెలుగు - TE
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          ಕನ್ನಡ - KN
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          മലയാളം - ML
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          বাংলা - BN
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="language"
-          />
-          मराठी - MR
-        </label>
+        {footerLanguages.map(([label, code]) => (
+          <label key={code}>
+            <input
+              type="radio"
+              name="footer-language"
+              checked={language === code}
+              onChange={() => {
+                setLanguage(code);
+                saveLanguage(code);
+              }}
+            />
+            {label}
+          </label>
+        ))}
 
      
 

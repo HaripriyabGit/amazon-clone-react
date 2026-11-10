@@ -1,9 +1,20 @@
 
 import React, { useState } from "react";
-import { Link ,useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
-
+import { productPath } from "../data/catalog";
+import ProductImage from "../components/ProductImage";
+import { readDeliveryLocation } from "../utils/session";
 import "./Cart.css";
+
+const readJSON = (key, fallback = []) => {
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || "null");
+    return Array.isArray(data) ? data : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 function Cart() {
   const {
@@ -14,24 +25,72 @@ function Cart() {
     clearCart,
     cartTotal,
   } = useCart();
-const navigate = useNavigate();
 
-  const [savedItems, setSavedItems] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("savedCartItems") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const navigate = useNavigate();
+  const deliveryPlace = readDeliveryLocation();
 
-  const [activeTab, setActiveTab] = useState("cart");
+  const [savedItems, setSavedItems] = useState(() =>
+    readJSON("savedCartItems")
+  );
+
+  const [recentItems] = useState(() =>
+    readJSON("recentlyViewed")
+  );
+
+  const [activeTab, setActiveTab] = useState("buyAgain");
+
+  const [selectedItems, setSelectedItems] = useState(() =>
+    cartItems.map((item) => String(item.id))
+  );
 
   const formatPrice = (price) =>
-    `₹${Number(price || 0).toLocaleString("en-IN")}`;
+    `₹${Number(price || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  const totalItems = cartItems.reduce(
+    (total, item) => total + Number(item.quantity || 1),
+    0
+  );
+
+  const selectedProducts = cartItems.filter((item) =>
+    selectedItems.includes(String(item.id))
+  );
+
+  const selectedTotal = selectedProducts.reduce(
+    (total, item) =>
+      total + Number(item.price || 0) * Number(item.quantity || 1),
+    0
+  );
+
+  const allSelected =
+    cartItems.length > 0 &&
+    cartItems.every((item) =>
+      selectedItems.includes(String(item.id))
+    );
 
   const saveItems = (items) => {
     setSavedItems(items);
     localStorage.setItem("savedCartItems", JSON.stringify(items));
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedItems(
+      allSelected
+        ? []
+        : cartItems.map((item) => String(item.id))
+    );
+  };
+
+  const toggleItem = (id) => {
+    const key = String(id);
+
+    setSelectedItems((previous) =>
+      previous.includes(key)
+        ? previous.filter((itemId) => itemId !== key)
+        : [...previous, key]
+    );
   };
 
   const saveForLater = (item) => {
@@ -44,6 +103,9 @@ const navigate = useNavigate();
     }
 
     removeFromCart(item.id);
+    setSelectedItems((previous) =>
+      previous.filter((id) => id !== String(item.id))
+    );
   };
 
   const moveToCart = (item) => {
@@ -56,259 +118,490 @@ const navigate = useNavigate();
     );
   };
 
-  const subtotal = cartItems.reduce(
-    (total, item) =>
-      total + (Number(item.price) || 0) * (item.quantity || 1),
-    0
-  );
+  const deleteSavedItem = (id) => {
+    saveItems(
+      savedItems.filter(
+        (item) => String(item.id) !== String(id)
+      )
+    );
+  };
 
-  const totalItems = cartItems.reduce(
-    (total, item) => total + (item.quantity || 1),
-    0
-  );
+  const proceedToBuy = () => {
+    if (selectedProducts.length === 0) return;
+
+    localStorage.removeItem("checkoutItem");
+    sessionStorage.removeItem("buyNowItem");
+
+    localStorage.setItem(
+      "selectedCheckoutItems",
+      JSON.stringify(selectedProducts)
+    );
+
+    navigate("/checkout");
+  };
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
 
   return (
     <div className="cart-page">
-      <div className="cart-main">
-        <section className="cart-left">
-          <div className="cart-heading">
-            <h1>
-              {activeTab === "cart"
-                ? "Shopping Cart"
-                : "Saved for later"}
-            </h1>
+      
+      <div className="cart-layout">
 
-            {activeTab === "cart" && cartItems.length > 0 && (
-              <button
-                className="cart-text-button"
-                onClick={clearCart}
-              >
-                Clear cart
-              </button>
-            )}
-          </div>
+        {/* LEFT SECTION */}
+        <main className="cart-left-column">
 
-          <div className="cart-tabs">
-            <button
-              className={activeTab === "cart" ? "active" : ""}
-              onClick={() => setActiveTab("cart")}
-            >
-              Shopping Cart ({totalItems})
-            </button>
+          {/* SHOPPING CART */}
+          <section className="cart-shopping-section">
 
-            <button
-              className={activeTab === "saved" ? "active" : ""}
-              onClick={() => setActiveTab("saved")}
-            >
-              Saved for Later ({savedItems.length})
-            </button>
-          </div>
+            <div className="cart-heading">
+              <h1>Shopping Cart</h1>
 
-          {activeTab === "cart" && (
-            <>
-              {cartItems.length === 0 ? (
-                <div className="cart-empty">
-                  <div className="cart-empty-icon">🛒</div>
-                  <div>
-                    <h2>Your Amazon Cart is empty</h2>
-                    <p>
-                      Your shopping cart is waiting for your
-                      favourite products.
-                    </p>
-                    <Link to="/" className="cart-shop-button">
-                      Continue shopping
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div className="cart-items">
-                  <p className="cart-price-label">Price</p>
-
-                  {cartItems.map((item) => (
-                    <article className="cart-item" key={item.id}>
-                      <div className="cart-item-image">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          onError={(e) => {
-                            e.currentTarget.style.visibility = "hidden";
-                          }}
-                        />
-                      </div>
-
-                      <div className="cart-item-details">
-                        <Link
-                          to={`/product/${item.id}`}
-                          className="cart-item-name"
-                        >
-                          {item.name}
-                        </Link>
-
-                        <p className="cart-stock">In Stock</p>
-
-                        {item.freeShipping && (
-                          <p className="cart-delivery">
-                            Eligible for Free Shipping
-                          </p>
-                        )}
-
-                        {item.features && (
-                          <p className="cart-features">
-                            {item.features}
-                          </p>
-                        )}
-
-                        <div className="cart-quantity">
-                          <button
-                            aria-label="Decrease quantity"
-                            disabled={(item.quantity || 1) <= 1}
-                            onClick={() =>
-                              updateQuantity(item.id, -1)
-                            }
-                          >
-                            −
-                          </button>
-
-                          <span>{item.quantity || 1}</span>
-
-                          <button
-                            aria-label="Increase quantity"
-                            onClick={() =>
-                              updateQuantity(item.id, 1)
-                            }
-                          >
-                            +
-                          </button>
-                        </div>
-
-                        <div className="cart-item-actions">
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                          >
-                            Delete
-                          </button>
-
-                          <span>|</span>
-
-                          <button
-                            onClick={() => saveForLater(item)}
-                          >
-                            Save for later
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="cart-item-price">
-                        {formatPrice(
-                          (Number(item.price) || 0) *
-                            (item.quantity || 1)
-                        )}
-                      </div>
-                    </article>
-                  ))}
-
-                  <div className="cart-subtotal">
-                    Subtotal ({totalItems} items):{" "}
-                    <strong>{formatPrice(subtotal)}</strong>
-                  </div>
-                </div>
+              {cartItems.length > 0 && (
+                <button
+                  className="cart-clear-button"
+                  onClick={clearCart}
+                >
+                  Delete all items
+                </button>
               )}
-            </>
-          )}
+            </div>
+            {/* MOBILE FIXED CHECKOUT BAR */}
 
-          {activeTab === "saved" && (
-            <div className="saved-items">
-              {savedItems.length === 0 ? (
-                <div className="cart-empty">
-                  <div>
-                    <h2>No saved items</h2>
-                    <p>
-                      Products you save for later will appear here.
-                    </p>
-                  </div>
+{cartItems.length > 0 && (
+  <div className="mobile-checkout-bar">
+
+    <button
+      className="mobile-proceed-button"
+      disabled={selectedProducts.length === 0}
+      onClick={proceedToBuy}
+    >
+      Proceed to Buy ({selectedProducts.reduce(
+        (total, item) => total + Number(item.quantity || 1),
+        0
+      )} item{selectedProducts.reduce(
+        (total, item) => total + Number(item.quantity || 1),
+        0
+      ) !== 1 ? "s" : ""})
+    </button>
+
+  </div>
+)}
+            {/* MOBILE CART SUMMARY */}
+
+<div className="mobile-cart-summary">
+
+  <h3>
+    Total{" "}
+    <strong>{formatPrice(selectedTotal)}</strong>
+    <button type="button" onClick={() => setShowMobileDetails(!showMobileDetails)}>
+      View details
+    </button>
+  </h3>
+
+  <p className="mobile-free-delivery">
+    <i className="bi bi-check-circle-fill"></i>
+    Your order qualifies for FREE Delivery.
+    <span> Select this option at checkout.</span>
+    <a href="/checkout"> Details</a>
+  </p>
+
+  <div className="mobile-cashback">
+    <i className="bi bi-check-circle-fill"></i>
+    <div>
+      <strong>₹25 cashback unlocked!</strong>
+      <small>Pay with Amazon Pay UPI</small>
+    </div>
+    <span>›</span>
+  </div>
+
+  {showMobileDetails && (
+    <div className="mobile-price-details">
+      <p>
+        Items ({selectedProducts.length} products)
+        <strong>{formatPrice(selectedTotal)}</strong>
+      </p>
+      <p>
+        Delivery
+        <strong>FREE</strong>
+      </p>
+    </div>
+  )}
+
+</div>
+
+            {cartItems.length > 0 && (
+              <div className="cart-select-all">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                  />
+                  {allSelected ? "Deselect all items" : "Select all items"}
+                </label>
+              </div>
+            )}
+
+            {cartItems.length === 0 ? (
+              <div className="cart-empty">
+              
+
+                <div>
+                  <h2>Your Amazon Cart is empty</h2>
+                  <p>
+                    Your shopping cart is waiting for your favourite
+                    products.Your shopping cart is waiting. Give it purpose – fill it with groceries, clothing, household supplies, electronics and more.
+Continue shopping on the Amazon.in homepage, learn about today's deals, or visit your Wish List.
+                  </p >
+
+                  
                 </div>
-              ) : (
-                savedItems.map((item) => (
+              </div>
+            ) : (
+              <div className="cart-items">
+
+                <div className="cart-price-heading">Price</div>
+
+                {cartItems.map((item) => (
                   <article className="cart-item" key={item.id}>
-                    <div className="cart-item-image">
-                      <img src={item.image} alt={item.name} />
+
+                    <div className="cart-item-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(String(item.id))}
+                        onChange={() => toggleItem(item.id)}
+                        aria-label={`Select ${item.name}`}
+                      />
                     </div>
 
-                    <div className="cart-item-details">
-                      <h3 className="cart-item-name">{item.name}</h3>
+                    <Link
+                      to={productPath(item.id)}
+                      className="cart-item-image"
+                    >
+                      <ProductImage
+                        src={item.image}
+                        alt={item.name}
+                      />
+                    </Link>
 
-                      <p className="cart-stock">Saved for later</p>
+                    <div className="cart-item-details">
+
+                      <Link
+                        to={productPath(item.id)}
+                        className="cart-item-name"
+                      >
+                        {item.name}
+                      </Link>
+
+                      <p className="cart-stock">In stock</p>
+
+                      <p className="cart-delivery">
+                        FREE delivery available
+                      </p>
+
+                      <p className="cart-fulfilled">
+                        <i className="bi bi-check-square-fill" />
+                        Fulfilled by Amazon
+                      </p>
+
+                      {item.features && (
+                        <p className="cart-features">
+                          {item.features}
+                        </p>
+                      )}
+
+                      <p className="cart-item-variant">
+                        {item.brand && (
+                          <>Brand: {item.brand} &nbsp; </>
+                        )}
+                      </p>
+
+                      <div className="cart-quantity">
+                        <button
+                          disabled={Number(item.quantity || 1) <= 1}
+                          onClick={() => updateQuantity(item.id, -1)}
+                          aria-label="Decrease quantity"
+                        >
+                          −
+                        </button>
+
+                        <span>{item.quantity || 1}</span>
+
+                        <button
+                          onClick={() => updateQuantity(item.id, 1)}
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
 
                       <div className="cart-item-actions">
-                        <button onClick={() => moveToCart(item)}>
-                          Add to Cart
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          Delete
                         </button>
 
                         <span>|</span>
 
                         <button
-                          onClick={() =>
-                            saveItems(
-                              savedItems.filter(
-                                (saved) =>
-                                  String(saved.id) !== String(item.id)
-                              )
-                            )
-                          }
+                          onClick={() => saveForLater(item)}
                         >
-                          Delete
+                          Save for later
+                        </button>
+
+                        <span>|</span>
+
+                        <button
+                          onClick={() => {
+                            navigator.clipboard?.writeText(
+                              window.location.origin +
+                              productPath(item.id)
+                            );
+                          }}
+                        >
+                          Share
                         </button>
                       </div>
                     </div>
 
                     <div className="cart-item-price">
-                      {formatPrice(item.price)}
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-          )}
-        </section>
+                      <strong>
+                        {formatPrice(
+                          Number(item.price || 0) *
+                          Number(item.quantity || 1)
+                        )}
+                      </strong>
 
-        <aside className="cart-right">
-          <div className="cart-summary">
+                      {item.discount > 0 && (
+                        <p className="cart-discount">
+                          {item.discount}% off
+                        </p>
+                      )}
+                    </div>
+
+                  </article>
+                ))}
+
+                <div className="cart-subtotal">
+                  Subtotal ({totalItems} items):{" "}
+                  <strong>{formatPrice(cartTotal ?? selectedTotal)}</strong>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* YOUR ITEMS */}
+          <section className="cart-your-items">
+
+            <h2>Your Items</h2>
+
+            <div className="cart-tabs">
+              <button
+                className={activeTab === "saved" ? "active" : ""}
+                onClick={() => setActiveTab("saved")}
+              >
+                Saved for later
+                {savedItems.length > 0 && ` (${savedItems.length})`}
+              </button>
+
+              <button
+                className={activeTab === "buyAgain" ? "active" : ""}
+                onClick={() => setActiveTab("buyAgain")}
+              >
+                Buy it again
+              </button>
+            </div>
+
+            {/* SAVED ITEMS */}
+            {activeTab === "saved" && (
+              <div className="cart-lower-items">
+
+                {savedItems.length === 0 ? (
+                  <p className="cart-no-items">
+                    No items saved for later
+                  </p>
+                ) : (
+                  savedItems.map((item) => (
+                    <article
+                      className="cart-lower-product"
+                      key={item.id}
+                    >
+                      <ProductImage
+                        src={item.image}
+                        alt={item.name}
+                      />
+
+                      <div>
+                        <Link to={productPath(item.id)}>
+                          {item.name}
+                        </Link>
+
+                        <strong>{formatPrice(item.price)}</strong>
+
+                        <div className="cart-item-actions">
+                          <button onClick={() => moveToCart(item)}>
+                            Add to Cart
+                          </button>
+
+                          <span>|</span>
+
+                          <button
+                            onClick={() => deleteSavedItem(item.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))
+                )}
+
+              </div>
+            )}
+
+            {/* BUY AGAIN */}
+            {activeTab === "buyAgain" && (
+              <div className="cart-lower-items">
+
+                {recentItems.length === 0 ? (
+                  <p className="cart-no-items">
+                    No items
+                  </p>
+                ) : (
+                  recentItems.map((item) => (
+                    <article
+                      className="cart-lower-product"
+                      key={item.id}
+                    >
+                      <ProductImage
+                        src={item.image}
+                        alt={item.name}
+                      />
+
+                      <div>
+                        <Link to={productPath(item.id)}>
+                          {item.name}
+                        </Link>
+
+                        <strong>{formatPrice(item.price)}</strong>
+
+                        <button
+                          className="cart-small-yellow-button"
+                          onClick={() => addToCart(item)}
+                        >
+                          Add to cart
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                )}
+
+              </div>
+            )}
+          </section>
+
+          <p className="cart-disclaimer">
+           The price and availability of items at Amazon.in are subject to change. The shopping cart is a temporary place to store a list of your items and reflects each item's most recent price.
+
+Do you have a gift card or promotional code? We'll ask you to enter your claim code when it's time to pay.
+          </p>
+
+        </main>
+
+        {/* RIGHT SECTION */}
+        <aside className="cart-right-column">
+
+          {/* ORDER SUMMARY */}
+          <section className="cart-summary">
+
             <p className="cart-free-delivery">
+              <i className="bi bi-check-circle-fill" />
               {cartItems.length > 0
-                ? "✓ Your order is eligible for delivery."
+                ? "Your order qualifies for FREE Delivery."
                 : "Add items to your cart to see your order total."}
             </p>
 
-            <h3>
-              Subtotal ({totalItems} items):{" "}
-              <strong>{formatPrice(cartTotal ?? subtotal)}</strong>
-            </h3>
-
             {cartItems.length > 0 && (
               <>
+                <h3>
+                  Subtotal ({selectedProducts.reduce(
+                    (total, item) =>
+                      total + Number(item.quantity || 1),
+                    0
+                  )} items):{" "}
+                  <strong>{formatPrice(selectedTotal)}</strong>
+                </h3>
+
                 <label className="cart-gift-option">
                   <input type="checkbox" />
                   This order contains a gift
                 </label>
 
                 <button
-  className="cart-checkout-button"
-  onClick={() => navigate("/checkout")}
->
-  Proceed to Buy
-</button>
+                  className="cart-checkout-button"
+                  disabled={selectedProducts.length === 0}
+                  onClick={proceedToBuy}
+                >
+                  Proceed to Buy
+                </button>
               </>
             )}
-          </div>
+          </section>
 
-          <div className="cart-recommendations">
-            <h3>Keep shopping for</h3>
-            <p>Discover more products for your needs.</p>
+          {/* RECENTLY VIEWED */}
+          <section className="cart-recommendations">
+            <h3>Your recently viewed items</h3>
 
-            <Link to="/" className="cart-recommend-link">
-              Explore products →
-            </Link>
-          </div>
+            {recentItems.length === 0 ? (
+              <p className="cart-no-recent">
+                Products you view will appear here.
+              </p>
+            ) : (
+              recentItems.slice(0, 5).map((item) => (
+                <article
+                  className="cart-recent-item"
+                  key={item.id}
+                >
+                  <Link
+                    to={productPath(item.id)}
+                    className="cart-recent-image"
+                  >
+                    <ProductImage
+                      src={item.image}
+                      alt={item.name}
+                    />
+                  </Link>
+
+                  <div className="cart-recent-details">
+                    <Link
+                      to={productPath(item.id)}
+                      className="cart-recent-name"
+                    >
+                      {item.name}
+                    </Link>
+
+                    <p className="cart-recent-rating">
+                      ★★★★★
+                    </p>
+
+                    <strong>{formatPrice(item.price)}</strong>
+
+                    <p className="cart-recent-delivery">
+                      FREE Delivery by Amazon
+                    </p>
+
+                    <button
+                      className="cart-small-yellow-button"
+                      onClick={() => addToCart(item)}
+                    >
+                      Add to cart
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </section>
+
         </aside>
       </div>
     </div>

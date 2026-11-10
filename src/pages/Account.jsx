@@ -26,7 +26,7 @@ const accountSections = [
     title: "Your Addresses",
     icon: "bi-geo-alt-fill",
     description: "Edit addresses for orders and gifts.",
-    link: "/addresses",
+    link: "#",
   },
   {
     title: "Your Business Account",
@@ -38,7 +38,7 @@ const accountSections = [
     title: "Payment Options",
     icon: "bi-credit-card-fill",
     description: "Edit or add payment methods.",
-    link: "/payments",
+    link: "#",
   },
   {
     title: "Amazon Pay Balance",
@@ -50,7 +50,7 @@ const accountSections = [
     title: "Contact Us",
     icon: "bi-headset",
     description: "Contact our customer service via phone or chat.",
-    link: "/contact",
+    link: "#",
   },
 ];
 

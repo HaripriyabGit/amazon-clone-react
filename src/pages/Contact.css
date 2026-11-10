@@ -1,0 +1,51 @@
+.contact-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  color: #0f1111;
+}
+
+.contact-page a {
+  color: #007185;
+  text-decoration: none;
+}
+
+.contact-page h1 {
+  margin: 10px 0 16px;
+  font-weight: 400;
+}
+
+.contact-card {
+  background: #fff;
+  border: 1px solid #d5d9d9;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.contact-card label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.contact-card input,
+.contact-card select,
+.contact-card textarea {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  padding: 8px;
+  font: inherit;
+  font-weight: 400;
+}
+
+.contact-card button {
+  border: 1px solid #fcd200;
+  border-radius: 8px;
+  background: #ffd814;
+  padding: 8px 16px;
+  cursor: pointer;
+}
